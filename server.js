@@ -29,7 +29,8 @@ app.use(cors({
 }));
 app.use(passport.initialize());
 // const dbURI = 'mongodb://127.0.0.1:27017/testing';
-const dbURI = process.env.MONGODB_URI;
+const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/?retryWrites=true&w=majority&appName=alIstiqama";
+// const dbURI = process.env.MONGODB_URI;
 
 mongoose.connect(dbURI)
   .then(() => {
