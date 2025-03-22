@@ -33,10 +33,10 @@ app.use(passport.initialize());
 const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/test?retryWrites=true&w=majority&appName=alIstiqama";
 
 // const dbURI = process.env.MONGODB_URI;
-
+const PORT = process.env.PORT || 3000;
 mongoose.connect(dbURI)
   .then(() => {
-    app.listen(3001, () => {
+    app.listen(PORT, () => {
       console.log('App running on port 3000');
     });
   })
