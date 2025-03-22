@@ -29,12 +29,14 @@ app.use(cors({
 }));
 app.use(passport.initialize());
 // const dbURI = 'mongodb://127.0.0.1:27017/testing';
-const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/?retryWrites=true&w=majority&appName=alIstiqama";
+// const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/?retryWrites=true&w=majority&appName=alIstiqama";
+const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/test?retryWrites=true&w=majority&appName=alIstiqama";
+
 // const dbURI = process.env.MONGODB_URI;
 
 mongoose.connect(dbURI)
   .then(() => {
-    app.listen(3000, () => {
+    app.listen(3001, () => {
       console.log('App running on port 3000');
     });
   })
