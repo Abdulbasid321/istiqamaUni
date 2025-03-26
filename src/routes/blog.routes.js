@@ -6,7 +6,7 @@ const adminAuth = require('../middleware/admin');
 
 
 router.post('/blog',
-    // adminAuth.authenticate('jwt', { session: false }),
+    adminAuth.authenticate('jwt', { session: false }),
     blogController.create)
 router.get('/blog',
     // adminAuth.authenticate('jwt', { session: false }),

@@ -44,34 +44,6 @@ const userSchema = mongoose.Schema({
           toDate: Date
         }
       ],
-    // firstName: {
-    //     type: String,
-    //     required: [true, 'please enter the student firstName'],
-    //     lowerCase: true,
-    // },
-    // sureName: {
-    //     type: String,
-    //     required: [true, 'please enter the student surName'],
-    //     lowerCase: true,
-    // },
-    
-    // email: {
-    //     type: String,
-    //     required: [true, 'plaese enter the student email email'],
-    //     unique: true,
-    //     lowerCase: true,
-    //     validate: [isEmail, 'please enter a valid email']
-    // },
-
-    // password: {
-    //     type: String,
-    //     required: [true, 'please enter your password'],
-    //     minlength: [6, 'the minimun length for password is 6 characters'],
-    // },
-
-    // classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class',
-    //     required: [true, 'plaese specify the student class'],
-    // },
 });
 
 userSchema.pre('save', async function (next) {

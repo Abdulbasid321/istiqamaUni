@@ -16,6 +16,8 @@ const resultRoutes = require('./src/routes/result.routes');
 const promoteRoute = require('./src/routes/promote.routes');
 const blogRoute = require('./src/routes/blog.routes');
 const galleryRoute = require('./src/routes/gallery.routes');
+const studentRoute = require('./src/routes/student.routes');
+const coursetRoute = require('./src/routes/Course.routes');
 require('./db');
 
 // Increase the JSON payload limit
@@ -62,7 +64,8 @@ app.use(authRoutes);
 app.use(resultRoutes);
 app.use(promoteRoute);
 app.use(blogRoute);
-app.use(galleryRoute);
+app.use(studentRoute);
+app.use(coursetRoute);
 
 module.exports = app;
 
