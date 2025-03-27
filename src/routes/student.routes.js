@@ -2,6 +2,7 @@ const { Router } = require('express');
 const router = Router();
 const studentController = require('../controllers/student.controller')
 const multer = require('multer');
+const Student = require('../model/student')
 
 // Configure multer storage
 const storage = multer.diskStorage({
