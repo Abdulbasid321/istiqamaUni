@@ -34,5 +34,32 @@ router.get('/students',
 //     studentController.delete)
 router.get('/stats', studentController.getStats);
 
+
+
+
+router.put("/students/:id", async (req, res) => {
+    try {
+      const studentId = req.params.id;
+      const updateData = req.body;
+  
+      const updatedStudent = await Student.findByIdAndUpdate(studentId, updateData, {
+        new: true, // Return the updated document
+        runValidators: true, // Ensure validation rules are applied
+      });
+  
+      if (!updatedStudent) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+  
+      res.json({ message: "Profile updated successfully", updatedStudent });
+    } catch (error) {
+      res.status(500).json({ message: "Error updating profile", error: error.message });
+    }
+  });
+  
+
 module.exports = router;
+
+
+
 
