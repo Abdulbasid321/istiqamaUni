@@ -27,7 +27,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 app.use(cookieParser());
 app.use(cors({
-  origin: ['"https://alistiqama-university.vercel.app"', 'http://localhost:3000', 'http://localhost:3001']
+  origin: ['https://alistiqama-university.vercel.app', 'http://localhost:3000', 'http://localhost:3001']
 }));
 app.use(passport.initialize());
 // const dbURI = 'mongodb://127.0.0.1:27017/testing';
