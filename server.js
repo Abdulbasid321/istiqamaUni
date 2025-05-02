@@ -114,7 +114,8 @@ app.use(cors({
 app.use(passport.initialize());
 
 // MongoDB Connection
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/istiqama';
+// const MONGODB_URI = 'mongodb://127.0.0.1:27017/istiqama';
+const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/test?retryWrites=true&w=majority&appName=alIstiqama";
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
