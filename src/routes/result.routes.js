@@ -90,6 +90,7 @@ const { Router } = require("express");
 const multer = require("multer");
 const cloudinary = require("../utils/clodinaryConfig");
 const Result = require("../model/Result");
+const authenticateStudent = require("../middleware/authStudent");
 
 const router = Router();
 
@@ -98,62 +99,215 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // 📌 Upload Result
-router.post("/uploadResult", upload.single("result"), async (req, res) => {
+
+router.post("/uploadResult", upload.array("results", 10), async (req, res) => {
   try {
-    const { regNumber } = req.body;
-    const file = req.file;
+    let regNumbers = req.body.regNumbers;
+    const files = req.files;
 
-    if (!file) return res.status(400).json({ error: "No file uploaded" });
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: "No files uploaded" });
+    }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        resource_type: "raw",
-        folder: "student_results",
-      },
-      async (error, result) => {
-        if (error) {
-          console.error("Cloudinary upload error:", error);
-          return res.status(500).json({ error: "Failed to upload to Cloudinary" });
-        }
+    if (!regNumbers || regNumbers.length === 0) {
+      return res.status(400).json({ error: "regNumbers are required" });
+    }
 
-        const newResult = new Result({
-          regNumber,
-          fileUrl: result.secure_url,
-          publicId: result.public_id,
-          fileName: file.originalname,
-          fileType: file.mimetype,
-        });
+    // Normalize regNumbers to array (handles case when it's a single string)
+    if (!Array.isArray(regNumbers)) {
+      regNumbers = [regNumbers];
+    }
 
-        await newResult.save();
-        res.status(201).json({ message: "Result uploaded successfully", result: newResult });
-      }
-    );
+    if (regNumbers.length !== files.length) {
+      return res.status(400).json({ error: "regNumbers count must match files count" });
+    }
 
-    uploadStream.end(file.buffer);
+    const uploadedResults = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const regNumber = regNumbers[i];
+      const safeFileName = regNumber.replace(/[^a-zA-Z0-9]/g, "");
+
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            resource_type: "raw",
+            public_id: `student_results/${safeFileName}_${file.originalname}`,
+            timeout: 60000,
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        ).end(file.buffer);
+      });
+
+      const newResult = new Result({
+        regNumber,
+        fileUrl: uploadResult.secure_url || uploadResult.url,
+        publicId: uploadResult.public_id,
+        fileName: file.originalname,
+        fileType: file.mimetype,
+      });
+
+      await newResult.save();
+      uploadedResults.push(newResult);
+    }
+
+    res.status(201).json({
+      message: "Results uploaded successfully",
+      results: uploadedResults,
+    });
+
+  } catch (err) {
+    console.error("Bulk upload error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// router.post("/uploadResult", upload.array("results", 10), async (req, res) => {
+//   try {
+//     const { regNumber } = req.body;
+//     const files = req.files;
+
+//     if (!files || files.length === 0) {
+//       return res.status(400).json({ error: "No files uploaded" });
+//     }
+
+//     if (!regNumber) {
+//       return res.status(400).json({ error: "regNumber is required" });
+//     }
+
+//     const safeFileName = regNumber.replace(/[^a-zA-Z0-9]/g, "");
+//     const uploadedResults = [];
+
+//     // Upload each file to Cloudinary
+//     for (const file of files) {
+//       const uploadResult = await new Promise((resolve, reject) => {
+//         cloudinary.uploader.upload_stream(
+//           {
+//             resource_type: "raw",
+//             public_id: `student_results/${safeFileName}_${file.originalname}`,
+//             timeout: 60000,
+//           },
+//           async (error, result) => {
+//             if (error) return reject(error);
+//             resolve(result);
+//           }
+//         ).end(file.buffer);
+//       });
+
+//       const newResult = new Result({
+//         regNumber,
+//         // fileUrl: uploadResult.secure_url,
+//         fileUrl: uploadResult.secure_url || uploadResult.url,
+
+//         publicId: uploadResult.public_id,
+//         fileName: file.originalname,
+//         fileType: file.mimetype,
+//       });
+
+//       await newResult.save();
+//       console.log("Saved result URL:", newResult.fileUrl);
+
+//       uploadedResults.push(newResult);
+//     }
+
+//     res.status(201).json({
+//       message: "Results uploaded successfully",
+//       results: uploadedResults,
+//     });
+
+//   } catch (err) {
+//     console.error("Bulk upload error:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+
+// router.get("/student/results", 
+//   authenticateStudent, 
+//   async (req, res) => {
+//   try {
+//     const regNumber = req.user.regNumber;
+
+//     if (!regNumber) {
+//       return res.status(400).json({ message: "Student registration number not found in token" });
+//     }
+
+//     const results = await Result.find({
+//       regNumber: { $regex: new RegExp(`^${regNumber}$`, "i") },
+//     });
+
+//     if (!results.length) {
+//       return res.status(200).json({ message: "No results found", results: [] });
+//     }
+
+//     res.status(200).json({ message: "Results fetched successfully", results });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// });
+
+router.get("/student/results/:regNumber", async (req, res) => {
+  try {
+    const { regNumber } = req.params;
+
+    if (!regNumber)
+      return res.status(400).json({ error: "Registration number is required" });
+
+    const result = await Result.find({ regNumber: regNumber.toUpperCase() });
+
+    if (!result)
+      return res.status(404).json({ message: "No result found for this reg number" });
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+
+// router.get("/student/results", async (req, res) => {
+//   try {
+//     const regNumber = req.user?.regNumber;
+//     if (!regNumber) {
+//       return res.status(400).json({ error: "Missing registration number" });
+//     }
+
+//     const sanitizedReg = regNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+//     const result = await Result.findOne({ regNumber: sanitizedReg });
+
+//     if (!result) {
+//       return res.status(404).json({ message: "No result found" });
+//     }
+
+//     res.status(200).json(result);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+
 // 📌 Get All Results for a Student
 // router.get("/getResults/:regNumber", async (req, res) => {
-router.get("/getResults/:regNumber", async (req, res) => {
-  try {
-    const { regNumber } = req.params;
+//   try {
+//     const { regNumber } = req.params;
 
-    const results = await Result.find({
-      regNumber: { $regex: new RegExp(`^${regNumber}$`, "i") },
-    });
+//     const results = await Result.find({
+//       regNumber: { $regex: new RegExp(`^${regNumber}$`, "i") },
+//     });
 
-    if (!results.length) {
-      return res.status(200).json({ message: "No results found", results: [] });
-    }
+//     if (!results.length) {
+//       return res.status(200).json({ message: "No results found", results: [] });
+//     }
 
-    res.status(200).json({ message: "Results fetched successfully", results });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
+//     res.status(200).json({ message: "Results fetched successfully", results });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// });
 
 // 📌 Delete Result by ID
 router.delete("/deleteResult/:id", async (req, res) => {
@@ -167,7 +321,7 @@ router.delete("/deleteResult/:id", async (req, res) => {
 
     // Delete from Cloudinary
     await cloudinary.uploader.destroy(result.publicId, {
-      resource_type: "auto",
+      resource_type: "raw",
     });
 
     // Delete from MongoDB

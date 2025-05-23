@@ -116,6 +116,7 @@ module.exports.login = async (req, res) => {
           data: {
             id: student._id,
             email: student.email,
+            regNumber: student.regNumber,
           },
         },
         process.env.JWT_SECRET || 'poiuytrewqasdfghjklmnbvcxz',

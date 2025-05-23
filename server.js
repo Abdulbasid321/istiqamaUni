@@ -92,6 +92,7 @@ const blogRoute = require('./src/routes/blog.routes');
 const galleryRoute = require('./src/routes/gallery.routes');
 const studentRoute = require('./src/routes/student.routes');
 const coursetRoute = require('./src/routes/Course.routes');
+const timetableRoute = require('./src/routes/timetable.routes');
 
 // Load DB config
 require('./db');
@@ -114,7 +115,7 @@ app.use(cors({
 app.use(passport.initialize());
 
 // MongoDB Connection
-// const MONGODB_URI = 'mongodb://127.0.0.1:27017/istiqama';
+// const dbURI = 'mongodb://127.0.0.1:27017/istiqama';
 const dbURI = "mongodb+srv://superMe:superMe123@alistiqama.iupxq.mongodb.net/test?retryWrites=true&w=majority&appName=alIstiqama";
 
 mongoose.connect(dbURI, {
@@ -149,6 +150,7 @@ app.use(blogRoute);
 app.use(galleryRoute); // ← was missing in your code
 app.use(studentRoute);
 app.use(coursetRoute);
+app.use(timetableRoute);
 
 // Start server
 const PORT = process.env.PORT || 5000;
